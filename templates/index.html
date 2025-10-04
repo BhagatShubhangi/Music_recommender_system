@@ -1,1 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Recommender - Discover Your Next Favorite Song</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-100px) rotate(180deg); }
+        }
+
+        /* Glass morphism container */
+        .glass-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 3rem;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-weight: 900;
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #fff 0%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5)); }
+            to { filter: drop-shadow(0 0 40px rgba(240, 147, 251, 0.8)); }
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+        }
+
+        /* Search form styling */
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1.5rem 2rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            padding: 1rem 3rem;
+            border-radius: 50px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .search-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(245, 87, 108, 0.6);
+        }
+
+        .search-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Feature tabs */
+        .feature-tabs {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Song cards */
+        .song-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .song-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s;
+        }
+
+        .song-card:hover::before {
+            left: 100%;
+        }
+
+        .song-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .song-title {
+            color: white;
+            font-weight: 700;
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .song-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.8rem;
+            border-radius: 12px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-top: 0.3rem;
+        }
+
+        /* Progress bars for stats */
+        .progress-bar-custom {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+
+        /* Play button */
+        .play-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.6);
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Filter section */
+        .filter-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-title {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .filter-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            margin: 1rem 0;
+        }
+
+        .filter-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .glass-container { padding: 2rem; }
+            .song-stats { grid-template-columns: 1fr; }
+        }
+
+        /* Music visualizer */
+        .visualizer {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            align-items: flex-end;
+            height: 80px;
+            margin: 2rem 0;
+        }
+
+        .bar {
+            width: 6px;
+            background: linear-gradient(to top, #f093fb, #f5576c);
+            border-radius: 3px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .bar:nth-child(1) { animation-delay: 0s; height: 30px; }
+        .bar:nth-child(2) { animation-delay: 0.1s; height: 50px; }
+        .bar:nth-child(3) { animation-delay: 0.2s; height: 40px; }
+        .bar:nth-child(4) { animation-delay: 0.3s; height: 60px; }
+        .bar:nth-child(5) { animation-delay: 0.4s; height: 35px; }
+        .bar:nth-child(6) { animation-delay: 0.5s; height: 55px; }
+        .bar:nth-child(7) { animation-delay: 0.6s; height: 45px; }
+        .bar:nth-child(8) { animation-delay: 0.7s; height: 50px; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.5); }
+            50% { transform: scaleY(1.5); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated particles -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container py-5">
+        <div class="glass-container">
+            <h1>🎵 Music Recommender</h1>
+            <p class="subtitle">Discover your next favorite song with AI-powered recommendations</p>
+
+            <!-- Music visualizer -->
+            <div class="visualizer">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+
+
+
+            <!-- Feature tabs -->
+            <div class="feature-tabs">
+                <button class="tab-btn active" onclick="filterByMood('all', this)">All</button>
+                <button class="tab-btn" onclick="filterByMood('energetic', this)">⚡ Energetic</button>
+                <button class="tab-btn" onclick="filterByMood('chill', this)">😌 Chill</button>
+                <button class="tab-btn" onclick="filterByMood('dance', this)">💃 Dance</button>
+                <button class="tab-btn" onclick="filterByMood('focus', this)">🎯 Focus</button>
+            </div>
+
+            <!-- Filter section -->
+            <div class="filter-section">
+                <div class="filter-title">🎛️ Customize Your Experience</div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label style="color: rgba(255,255,255,0.8)">Energy Level</label>
+                        <input type="range" class="filter-slider" min="0" max="100" value="50" 
+                               oninput="updateFilter('energy', this.value)">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label style="color: rgba(255,255,255,0.8)">Danceability</label>
+                        <input type="range" class="filter-slider" min="0" max="100" value="50"
+                               oninput="updateFilter('dance', this.value)">
+                    </div>
+                </div>
+            </div>
+            <form method="POST" class="search-wrapper">
+                <input type="text" name="song_name" placeholder="🔍 Enter a song name or artist..."
+                    class="search-input" value="{{ query }}" required>
+                <button type="submit" class="search-btn mt-3">
+                    <span style="position: relative; z-index: 1;">Get Recommendations</span>
+                </button>
+            </form>
+
+            <!-- Recommendations section -->
+            <div id="recommendations">
+    {% if recommendations %}
+        <h3 style="color: white; font-weight: 700; margin-bottom: 2rem;">🎼 Recommended For You</h3>
+        <div class="row">
+            {% for song in recommendations %}
+                {% if song.error %}
+                    <div class="alert alert-danger">{{ song.error }}</div>
+                {% else %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="song-card" onclick="playSong(this)">
+                            <button class="play-btn">▶</button>
+                            <div class="song-title">{{ song.name }}</div>
+                            <div class="song-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">Duration</div>
+                                    <div class="stat-value">{{ song.duration }}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">BPM</div>
+                                    <div class="stat-value">{{ song.tempo }}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Energy</div>
+                                    <div class="stat-value">{{ song.energy }}</div>
+                                    <div class="progress-bar-custom">
+                                        <div class="progress-fill" style="width: {{ song.energy }}"></div>
+                                    </div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Dance</div>
+                                    <div class="stat-value">{{ song.danceability }}</div>
+                                    <div class="progress-bar-custom">
+                                        <div class="progress-fill" style="width: {{ song.danceability }}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+        </div>
+    </div>
+
+    <script>
+        // Create animated particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 30;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 60 + 20;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        createParticles();
+
+        // Play song animation
+        function playSong(card) {
+            const playBtn = card.querySelector('.play-btn');
+            if (playBtn.textContent === '▶') {
+                playBtn.textContent = '⏸';
+                card.style.background = 'linear-gradient(135deg, rgba(240, 147, 251, 0.3), rgba(245, 87, 108, 0.3))';
+            } else {
+                playBtn.textContent = '▶';
+                card.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05))';
+            }
+        }
+
+        // Filter by mood
+        function filterByMood(mood, element) {
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            element.classList.add('active');
+
+            // Add filter logic here
+            console.log('Filtering by:', mood);
+        }
+
+        // Update filter sliders
+        function updateFilter(type, value) {
+            console.log(`${type}: ${value}%`);
+            // Add filter logic here
+        }
+
+        // Animate progress bars on load
+        window.addEventListener('load', () => {
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>
